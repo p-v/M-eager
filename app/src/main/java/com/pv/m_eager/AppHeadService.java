@@ -6,6 +6,8 @@ import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.NotificationCompat;
@@ -17,9 +19,11 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.util.List;
+
 
 /**
- * @author imi
+ * @author p-v
  */
 public class AppHeadService extends Service {
 
@@ -37,19 +41,63 @@ public class AppHeadService extends Service {
         showMainHead();
         final ClipboardManager clipboard= (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
         clipboard.addPrimaryClipChangedListener(new ClipboardManager.OnPrimaryClipChangedListener() {
+
+            private Handler handler = null;
+
             @Override
             public void onPrimaryClipChanged() {
-                if (clipboard.hasPrimaryClip()) {
-                    ClipDescription description = clipboard.getPrimaryClipDescription();
-                    android.content.ClipData data = clipboard.getPrimaryClip();
-                    if (data != null && description != null && description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
-                        Toast.makeText(getApplicationContext(), String.valueOf(data.getItemAt(0).getText()), Toast.LENGTH_SHORT).show();
-                    } else if(data !=null && description!=null && description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)) {
-                        Toast.makeText(getApplicationContext(), String.valueOf(data.getItemAt(0).getText()), Toast.LENGTH_SHORT).show();
-                    }
+                if(handler == null){
+                    handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (clipboard.hasPrimaryClip()) {
+                                ClipDescription description = clipboard.getPrimaryClipDescription();
+                                android.content.ClipData data = clipboard.getPrimaryClip();
+                                if (data != null && description != null && description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)) {
+                                    String word = String.valueOf(data.getItemAt(0).getText());
+                                    //call db async
+                                    AsyncTaskTest asyncTaskTest = new AsyncTaskTest();
+                                    asyncTaskTest.execute(word);
+                                } else if(data !=null && description!=null && description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)) {
+                                    String word = String.valueOf(data.getItemAt(0).getText());
+                                    //call db async
+                                    AsyncTaskTest asyncTaskTest = new AsyncTaskTest();
+                                    asyncTaskTest.execute(word);
+
+                                }
+                            }
+                            handler = null;
+                        }
+                    },500);
                 }
             }
         });
+    }
+
+    private class AsyncTaskTest extends AsyncTask<String,String,List<String>> {
+
+        @Override
+        protected List<String> doInBackground(String[] params) {
+            MeagerDbHelper dbHelper = new MeagerDbHelper(getApplicationContext());
+            dbHelper.createDatabase();
+
+            List<String> meaning = null;
+            try{
+                meaning = dbHelper.getMeaning(params[0]);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return meaning;
+        }
+
+        @Override
+        protected void onPostExecute(List<String> strings) {
+            super.onPostExecute(strings);
+            if(strings!=null && !strings.isEmpty()){
+                Toast.makeText(getBaseContext(),strings.get(0),Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     private void showMainHead(){
