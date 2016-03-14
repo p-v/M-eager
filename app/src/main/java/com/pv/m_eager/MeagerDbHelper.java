@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.pv.m_eager.model.Meaning;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,16 +115,15 @@ public class MeagerDbHelper extends SQLiteOpenHelper {
         super.close();
     }
 
-    public List<String> getMeaning(String word) throws SQLException {
+    public List<Meaning> getMeaning(String word) throws SQLException {
         try{
             openDataBase();
-            Cursor cur = mDataBase.rawQuery("SELECT * FROM entries where word = ?", new String[]{word});
+            Cursor cur = mDataBase.rawQuery("SELECT * FROM entries where word = ? COLLATE NOCASE", new String[]{word});
 
-            List<String> meaning = new ArrayList<>(cur.getCount());
+            List<Meaning> meaning = new ArrayList<>(cur.getCount());
             while(cur.moveToNext()){
-                meaning.add(cur.getString(2));
+                meaning.add(new Meaning(cur.getString(1),cur.getString(2)));
             }
-
             return meaning;
         }finally {
             close();
