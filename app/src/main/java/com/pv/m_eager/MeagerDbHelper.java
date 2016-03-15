@@ -122,7 +122,7 @@ public class MeagerDbHelper extends SQLiteOpenHelper {
 
             List<Meaning> meaning = new ArrayList<>(cur.getCount());
             while(cur.moveToNext()){
-                meaning.add(new Meaning(cur.getString(1),cur.getString(2)));
+                meaning.add(new Meaning(cur.getString(1),cur.getString(2).replaceAll("\\\\n"," ")));
             }
             return meaning;
         }finally {

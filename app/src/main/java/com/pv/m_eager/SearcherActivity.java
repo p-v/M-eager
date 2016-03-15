@@ -57,10 +57,22 @@ public class SearcherActivity extends AppCompatActivity {
         protected void onPostExecute(List<Meaning> strings) {
             super.onPostExecute(strings);
             if(strings!=null && !strings.isEmpty()){
-                meaning.setText(strings.get(0).getMeaning());
+                meaning.setText(buildMeaningText(strings));
             }else{
                 meaning.setText("No results found");
             }
+        }
+
+        private String buildMeaningText(List<Meaning> strings){
+
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < strings.size(); i++){
+                builder.append(i+1);
+                builder.append(". ");
+                builder.append(strings.get(i).getMeaning());
+                builder.append("\n");
+            }
+            return builder.toString();
         }
     }
 }
