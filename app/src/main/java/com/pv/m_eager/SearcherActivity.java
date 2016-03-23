@@ -1,78 +1,47 @@
 package com.pv.m_eager;
 
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.AppCompatActivity;
+import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.pv.m_eager.model.Meaning;
-
-import java.util.List;
+import com.pv.m_eager.external.LocalDictionaryImpl;
+import com.pv.m_eager.external.WiktionaryImpl;
 
 public class SearcherActivity extends AppCompatActivity {
 
-    private GetMeaningAsyncTask asyncTask;
-    private TextView meaning;
+    private Dictionary getDictionary(int flag){
+        switch (flag){
+            case 1:
+                return new WiktionaryImpl(this);
+            case 2:
+                return new LocalDictionaryImpl(this);
+        }
+        return null;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_searcher);
 
-        TextView title = (TextView)findViewById(R.id.word_title);
-        meaning = (TextView)findViewById(R.id.meaning_container);
+        NestedScrollView view = (NestedScrollView)findViewById(R.id.scrollView);
+        Dictionary dictionary = getDictionary(2);
+        if(dictionary == null){
+            Toast.makeText(this,"Something went wrong",Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        view.addView(dictionary.getView(),new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        TextView title = (TextView)findViewById(R.id.word_title);
         String word = getIntent().getStringExtra("word");
         title.setText(word);
 
-        asyncTask = new GetMeaningAsyncTask();
-        asyncTask.execute(word);
+        dictionary.onLoad(word);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(asyncTask!=null){
-            asyncTask.cancel(true);
-        }
-    }
-
-    private class GetMeaningAsyncTask extends AsyncTask<String,String,List<Meaning>> {
-
-        @Override
-        protected List<Meaning> doInBackground(String[] params) {
-            MeagerDbHelper dbHelper = new MeagerDbHelper(getApplicationContext());
-            dbHelper.createDatabase();
-
-            List<Meaning> meaning = null;
-            try{
-                meaning = dbHelper.getMeaning(params[0]);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return meaning;
-        }
-
-        @Override
-        protected void onPostExecute(List<Meaning> strings) {
-            super.onPostExecute(strings);
-            if(strings!=null && !strings.isEmpty()){
-                meaning.setText(buildMeaningText(strings));
-            }else{
-                meaning.setText("No results found");
-            }
-        }
-
-        private String buildMeaningText(List<Meaning> strings){
-
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < strings.size(); i++){
-                builder.append(i+1);
-                builder.append(". ");
-                builder.append(strings.get(i).getMeaning());
-                builder.append("\n");
-            }
-            return builder.toString();
-        }
-    }
 }

@@ -78,10 +78,12 @@ public class AppHeadService extends Service {
                                     description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML))) {
                                 String word = String.valueOf(data.getItemAt(0).getText());
                                 //TODO add word validation
-                                Intent searchActivity = new Intent(getApplicationContext(), SearcherActivity.class);
-                                searchActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                searchActivity.putExtra("word", word);
-                                startActivity(searchActivity);
+                                if(word!=null && word.length()<100 && word.split(" ").length<3){
+                                    Intent searchActivity = new Intent(getApplicationContext(), SearcherActivity.class);
+                                    searchActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    searchActivity.putExtra("word", word);
+                                    startActivity(searchActivity);
+                                }
                             }
                         }
                         handler = null;

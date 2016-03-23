@@ -21,8 +21,6 @@ import java.util.List;
  */
 public class MeagerDbHelper extends SQLiteOpenHelper {
 
-    private static String DB_PATH = "/data/data/com.pv.m_eager/databases/";
-
     public static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "dictionary.db";
 
@@ -57,7 +55,7 @@ public class MeagerDbHelper extends SQLiteOpenHelper {
         InputStream myInput = mContext.getAssets().open(DATABASE_NAME);
 
         // Path to the just created empty db
-        String outFileName = DB_PATH + DATABASE_NAME;
+        String outFileName = mContext.getDatabasePath(DATABASE_NAME).getPath();
 
         //Open the empty db as the output stream
         OutputStream myOutput = new FileOutputStream(outFileName);
@@ -78,14 +76,14 @@ public class MeagerDbHelper extends SQLiteOpenHelper {
 
     public void openDataBase() throws SQLException {
         //Open the database
-        String myPath = DB_PATH + DATABASE_NAME;
+        String myPath = mContext.getDatabasePath(DATABASE_NAME).getPath();
         mDataBase = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
     }
 
     private boolean checkDataBase(){
         SQLiteDatabase checkDB = null;
         try{
-            String myPath = DB_PATH + DATABASE_NAME;
+            String myPath = mContext.getDatabasePath(DATABASE_NAME).getPath();
             checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
         }catch(SQLiteException e){
             //database doesn't exist yet.
